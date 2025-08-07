@@ -10,6 +10,8 @@
 ### Mobile (Expo)
 ```bash
 cd apps/mobile
+npm i
+cp .env.example .env # put your API URL and Firebase keys
 npm run ios # or: npm run android / npm run web
 ```
 
@@ -26,6 +28,11 @@ Health: http://localhost:8000/healthz
 - Login: `npm i -g firebase-tools && firebase login`
 - Initialize (optional now): `firebase use investoros-dev`
 - Emulators: `firebase emulators:start` (after you run `firebase init` in `infra/firebase` if desired)
+
+### Env
+- Mobile uses `apps/mobile/.env` loaded by `app.config.ts` and exposed in `extra`.
+- Set `EXPO_PUBLIC_API_URL` for device testing (e.g., `http://YOUR_LAN_IP:8000`).
+- Add Firebase web app keys to enable Auth.
 
 ## Next
 - Wire mobile app to call `/ai/deals/underwrite`
