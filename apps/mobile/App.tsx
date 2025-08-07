@@ -1,5 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
+import Constants from 'expo-constants';
 import {
   SafeAreaView,
   ScrollView,
@@ -22,9 +23,23 @@ type UnderwriteResponse = {
   cash_on_cash_roi: number;
 };
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL =
+  (Constants.expoConfig as any)?.extra?.apiUrl || process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000';
+
+// Firebase Auth (email/password minimal)
+import { auth } from './src/firebase';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
 export default function App() {
+  const [user, setUser] = React.useState<any>(null);
+  const [email, setEmail] = React.useState('demo@example.com');
+  const [password, setPassword] = React.useState('password123');
+
+  React.useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return unsub;
+  }, []);
+
   const [purchasePrice, setPurchasePrice] = React.useState('300000');
   const [rehabCost, setRehabCost] = React.useState('30000');
   const [monthlyRent, setMonthlyRent] = React.useState('2500');
@@ -105,11 +120,43 @@ export default function App() {
     </View>
   );
 
+  const AuthBlock = () => (
+    <View style={styles.authBox}>
+      {user ? (
+        <View style={{ gap: 8 }}>
+          <Text style={{ fontWeight: '600' }}>Signed in as {user.email}</Text>
+          <TouchableOpacity style={styles.buttonSecondary} onPress={() => signOut(auth)}>
+            <Text style={styles.buttonSecondaryText}>Sign out</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={{ gap: 8 }}>
+          <Text style={styles.subtitle}>Sign in to save deals</Text>
+          <TextInput style={styles.input} placeholder="Email" autoCapitalize="none" value={email} onChangeText={setEmail} />
+          <TextInput style={styles.input} placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+          <TouchableOpacity
+            style={styles.buttonSecondary}
+            onPress={async () => {
+              try {
+                await signInWithEmailAndPassword(auth, email, password);
+              } catch (e: any) {
+                setError(e?.message || 'Auth error');
+              }
+            }}
+          >
+            <Text style={styles.buttonSecondaryText}>Sign in</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="dark" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>InvestorOS — Deal Evaluator</Text>
+        <AuthBlock />
 
         <NumberField label="Purchase Price" value={purchasePrice} onChange={setPurchasePrice} />
         <NumberField label="Rehab Cost" value={rehabCost} onChange={setRehabCost} />
@@ -163,6 +210,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 12,
   },
+  subtitle: {
+    fontSize: 14,
+    color: '#333',
+  },
   field: {
     marginBottom: 10,
   },
@@ -192,6 +243,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  buttonSecondary: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: '#e1e3e8',
+  },
+  buttonSecondaryText: {
+    color: '#111',
+    fontSize: 15,
+    fontWeight: '600',
+  },
   error: {
     color: '#b00020',
     marginTop: 10,
@@ -208,5 +272,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+  },
+  authBox: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#e1e3e8',
   },
 });
