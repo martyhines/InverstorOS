@@ -33,6 +33,9 @@ const config: ExpoConfig = {
     output: 'static',
     favicon: './assets/favicon.png',
   },
+  plugins: [
+    'expo-router',
+  ],
   extra: {
     apiUrl: process.env.EXPO_PUBLIC_API_URL || 'http://localhost:8000',
     firebase: {

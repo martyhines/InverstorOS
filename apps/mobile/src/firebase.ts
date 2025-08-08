@@ -1,8 +1,6 @@
 import Constants from 'expo-constants';
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, initializeAuth, browserLocalPersistence } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getReactNativePersistence } from 'firebase/auth/react-native';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
@@ -19,19 +17,8 @@ const firebaseConfig = {
 
 const app = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig);
 
-// On native, use RN persistence; on web, default browser persistence
-let auth = getAuth(app);
-try {
-  // initializeAuth throws if already initialized; wrap in try
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-  // For web compatibility, ensure browser fallback
-  // @ts-ignore
-  auth.setPersistence?.(browserLocalPersistence).catch(() => {});
-} catch {
-  // ignore
-}
+// Simplified: use default auth across platforms to avoid native-only imports during web bundling
+const auth = getAuth(app);
 
 const db = getFirestore(app);
 const storage = getStorage(app);
